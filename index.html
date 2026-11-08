@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Comparatif LLM</title>
+<style>
+:root{--bg:#fff;--fg:#14213d;--mut:#5b6475;--card:#f3f5fa;--b:#dfe3ec;--acc:#10a37f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1420;--fg:#e8ecf5;--mut:#9aa5b8;--card:#182033;--b:#2a3550}}
+:root[data-theme="dark"]{--bg:#0f1420;--fg:#e8ecf5;--mut:#9aa5b8;--card:#182033;--b:#2a3550}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+.w{max-width:1000px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+h1{font-size:1.6rem;margin:.4em 0 .1em}h2{font-size:1.15rem;margin:1.8em 0 .6em;border-inline-start:4px solid var(--pc,var(--acc));padding-inline-start:10px}
+.sub,.sm{color:var(--mut);margin:0}.sm{font-size:.8rem;margin:.4em 0}
+button{border:1px solid var(--b);background:var(--card);color:var(--fg);padding:6px 12px;border-radius:8px;cursor:pointer;font:inherit;margin:2px}
+button.on{background:var(--pc,var(--acc));color:#fff;border-color:var(--pc,var(--acc))}
+.ch{margin:14px 0 4px}.ch button{font-weight:600}
+.g{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.c{background:var(--card);border:1px solid var(--b);border-radius:12px;padding:12px}
+.c h3{margin:0 0 6px;font-size:.95rem}
+.r{display:grid;grid-template-columns:96px 1fr 58px;gap:8px;align-items:center;margin:6px 0;font-size:.82rem}
+.tr{background:var(--b);border-radius:6px;height:12px;overflow:hidden}.tr i{display:block;height:100%;border-radius:6px}
+.r b{text-align:end;font-variant-numeric:tabular-nums}
+.ok{color:var(--acc)}.no{color:#d9534f}ul{margin:4px 0;padding-inline-start:18px}
+.sc{overflow-x:auto}.sc svg{width:100%;max-width:560px;height:auto}
+table{border-collapse:collapse;width:100%;font-size:.85rem}th,td{padding:6px;border:1px solid var(--b);text-align:center}
+td:first-child,th:first-child{text-align:start}
+.l0{background:var(--b)}.l1{background:rgba(16,163,127,.18)}.l2{background:rgba(16,163,127,.4)}.l3{background:rgba(16,163,127,.7);color:#fff}
+@media print{.bt,.ch,.pb{display:none}}
+</style></head><body><div class="w">
+<header><div><h1 id="t"></h1><p class="sub" id="su"></p></div>
+<div class="bt"><button data-l="fr">FR</button><button data-l="en">EN</button><button data-l="ar">عربي</button><button class="pb" id="pb"></button></div></header>
+<div class="ch" id="ch"></div><main id="m"></main></div>
+<script>
+const PC=["#8d99ae","#4f8cff","#7a5cff","#10a37f"];
+// [nom, $ entrée, $ sortie, contexte, vitesse/10, qualité/10, niveaux texte-image-vidéo-recherche-code-jeux-apps-sites]
+const P={
+anthropic:{n:"Anthropic",c:"#d97757",m:[["Haiku 5.5",.1,.5,"1M",9,6.8,"21012122"],["Sonnet 5.5",2,10,"1M",7,8.7,"32023233"],["Opus 5.5",4,20,"1M",5,9.2,"32033333"]]},
+openai:{n:"OpenAI",c:"#10a37f",m:[["Luna",.1,.5,"1M",9,6,"21012112"],["Terra",1,5,"1M",8,7.5,"33122222"],["Sol 6.1",2,10,"1M",6,8.7,"32133233"],["Astra",10,50,"1M",3,9.3,"33133333"]]},
+moonshot:{n:"Moonshot",c:"#3b82f6",m:[["K3.1 Pro",2,10,"1M",6,8.4,"22223233"],["K3.1 Highspeed",4,20,"1M",8,8.4,"22223233"]]},
+qwen:{n:"Qwen",c:"#7c3aed",m:[["3.8 Flash",.15,.47,"1M",9,6.8,"21012122"],["3.8 Max",2,6,"1M",5,8.6,"32123233"]]},
+deepseek:{n:"DeepSeek",c:"#2563eb",m:[["V4.1 Flash",.15,.6,"1M",9,7.2,"21012122"],["V4 Pro",.66,1.98,"1M",6,8.4,"30013233"]]},
+glm:{n:"GLM",c:"#0ea5a4",m:[["5.3 Flash",.15,.5,"1M",9,7,"22112122"],["5.3",1.4,4.4,"1M",6,8.4,"30023233"]]},
+bigpickle:{n:"Big Pickle",c:"#65a30d",m:[["Big Pickle",0,0,"200K",7,6.5,"20012122"]]},
+google:{n:"Google",c:"#ea4335",m:[["Flash-Lite 3.5",.3,2.5,"1M",9,6.5,"22221112"],["Flash 3.8",.75,3.75,"1M",8,7.8,"33232223"],["Pro 3.1",2,12,"1M",6,8.4,"33233233"],["Argon 4",2,10,"1M",5,9,"33233333"]]}};
+const TT={9:3,8:5,7:7,6:10,5:14,3:20};
+const T={
+fr:{dir:"ltr",title:"Comparatif des IA — 8 fournisseurs",sub:"Qualité, prix, vitesse et limites — état au 8 novembre 2026. Choisissez un fournisseur.",pb:"Imprimer / PDF",free:"Gratuit",
+s1:"1. Rapport qualité / prix / vitesse",pr:"Prix de sortie ($/M tokens, échelle log)",sp:"Vitesse (indicatif /10)",ql:"Qualité (indicatif /10)",sc:"Qualité vs prix : tous les fournisseurs",
+s2:"2. Points forts et faibles",s3:"3. Projet réel : tableau de bord web de ventes",pd:"Hypothèse : ~200 K tokens en entrée, ~60 K en sortie (raisonnement inclus). Temps et qualité : estimations à valider par vos tests.",tm:"Temps estimé (min)",co:"Coût estimé ($)",qu:"Qualité escomptée /10",
+s4:"4. Limites par usage",rows:["Texte","Image","Vidéo","Recherche web","Codage","Jeux","Applications","Sites web"],lg:"Niveau : (vide) très limité · ● faible · ●● bon · ●●● excellent",
+ft:"Prix : pages tarifaires officielles et agrégateurs, 8 nov. 2026 ($/M tokens, API). Vitesse, qualité et niveaux : estimations indicatives de ma part, pas des mesures officielles. À valider par vos propres tests.",
+p:{anthropic:[["Fort en code agentique","Contexte 1M au tarif standard"],["Pas de génération d’images","Opus 2× plus cher que Sonnet"],"Haiku : tarif majoré au-delà de 100 K tokens."],
+openai:[["Gamme complète Luna → Astra","Fort en code et usage d’ordinateur"],["Astra très cher (10 / 50)","Terra absent du chat classique"],"Sol : tarif majoré au-delà de 272 K tokens."],
+moonshot:[["Open-weight, vision et vidéo","1M de contexte, bon prix"],["Code : 81 % contre 92 % pour Opus 5.5 (test tiers)","Highspeed : prix ×2"],"Test tiers : 129 tâches Go privées (Requesty)."],
+qwen:[["Prix très bas","Max : 2,4T paramètres, 1M de contexte"],["Meilleurs modèles en API seulement","Qwen 4 annoncé, pas encore sorti"],"Prix API internationale ; varient selon la région."],
+deepseek:[["Parmi les prix les plus bas","1M de contexte, licence MIT"],["V4 Pro sans vision","Tarif ×2 aux heures de pointe"],"Prix affichés : heures creuses."],
+glm:[["Code agentique, poids ouverts","Flash multimodal très économique"],["GLM-5.3 : texte seul","En retrait d’Opus sur NL2Repo (58 % vs 70 %)"],"Prix via Together AI / OpenRouter."],
+bigpickle:[["Gratuit pendant l’aperçu","Pensé pour les agents de code"],["Modèle sous-jacent non communiqué","Contexte 200K, pas de vision"],"Modèle « furtif » d’OpenCode Zen ; gratuité limitée dans le temps."],
+google:[["Multimodal (image, vidéo, voix)","1M de contexte, large gamme"],["Argon : tarif ×2 dès le 1er déc.","Carbon à accès restreint"],"Argon : 2 / 10 $ jusqu’au 30 nov., puis 4 / 20 $."]}},
+en:{dir:"ltr",title:"AI model comparison — 8 providers",sub:"Quality, price, speed and limits — as of November 8, 2026. Pick a provider.",pb:"Print / PDF",free:"Free",
+s1:"1. Quality / price / speed",pr:"Output price ($/M tokens, log scale)",sp:"Speed (indicative /10)",ql:"Quality (indicative /10)",sc:"Quality vs price: all providers",
+s2:"2. Strengths and weaknesses",s3:"3. Real project: sales web dashboard",pd:"Assumption: ~200K input tokens, ~60K output tokens (reasoning included). Time and quality are estimates to validate with your own tests.",tm:"Estimated time (min)",co:"Estimated cost ($)",qu:"Expected quality /10",
+s4:"4. Limits by use case",rows:["Text","Image","Video","Web search","Coding","Games","Apps","Websites"],lg:"Level: (blank) very limited · ● low · ●● good · ●●● excellent",
+ft:"Prices: official pricing pages and aggregators, Nov 8, 2026 ($/M tokens, API). Speed, quality and levels are my indicative estimates, not official measurements. Validate with your own tests.",
+p:{anthropic:[["Strong at agentic coding","1M context at standard price"],["No image generation","Opus costs 2× Sonnet"],"Haiku: higher rate beyond 100K tokens."],
+openai:[["Full range Luna → Astra","Strong at code and computer use"],["Astra is pricey (10 / 50)","Terra not in regular chat"],"Sol: higher rate beyond 272K tokens."],
+moonshot:[["Open-weight, vision and video","1M context, good price"],["Code: 81% vs 92% for Opus 5.5 (third-party test)","Highspeed costs 2×"],"Third-party test: 129 private Go tasks (Requesty)."],
+qwen:[["Very low prices","Max: 2.4T parameters, 1M context"],["Best models are API-only","Qwen 4 announced, not yet out"],"International API prices; vary by region."],
+deepseek:[["Among the lowest prices","1M context, MIT license"],["V4 Pro has no vision","2× rate at peak hours"],"Prices shown: off-peak."],
+glm:[["Agentic coding, open weights","Very cheap multimodal Flash"],["GLM-5.3 is text-only","Behind Opus on NL2Repo (58% vs 70%)"],"Prices via Together AI / OpenRouter."],
+bigpickle:[["Free during the preview","Built for coding agents"],["Underlying model undisclosed","200K context, no vision"],"“Stealth” OpenCode Zen model; free for a limited time."],
+google:[["Multimodal (image, video, voice)","1M context, wide range"],["Argon: 2× price from Dec 1","Carbon has restricted access"],"Argon: $2 / $10 until Nov 30, then $4 / $20."]}},
+ar:{dir:"rtl",title:"مقارنة نماذج الذكاء الاصطناعي — 8 مزوّدين",sub:"الجودة والسعر والسرعة والحدود — حتى 8 نوفمبر 2026. اختاروا مزوّدًا.",pb:"طباعة / PDF",free:"مجاني",
+s1:"1. الجودة / السعر / السرعة",pr:"سعر المخرجات ($ لكل مليون رمز، مقياس لوغاريتمي)",sp:"السرعة (تقديري /10)",ql:"الجودة (تقديري /10)",sc:"الجودة مقابل السعر: كل المزوّدين",
+s2:"2. نقاط القوة والضعف",s3:"3. مشروع فعلي: لوحة مبيعات على الويب",pd:"الافتراض: نحو 200 ألف رمز إدخال و60 ألف رمز إخراج (مع الاستدلال). الوقت والجودة تقديران يلزم التحقق منهما باختباراتكم.",tm:"الوقت المقدّر (دقيقة)",co:"التكلفة المقدّرة ($)",qu:"الجودة المتوقعة /10",
+s4:"4. الحدود حسب الاستخدام",rows:["النص","الصور","الفيديو","البحث على الويب","البرمجة","الألعاب","التطبيقات","المواقع"],lg:"المستوى: (فارغ) محدود جدًا · ● ضعيف · ●● جيد · ●●● ممتاز",
+ft:"الأسعار: صفحات التسعير الرسمية ومواقع التجميع بتاريخ 8 نوفمبر 2026 ($ لكل مليون رمز، API). السرعة والجودة والمستويات تقديرات إرشادية مني وليست قياسات رسمية. تحقّقوا باختباراتكم.",
+p:{anthropic:[["قوي في البرمجة الوكيلة","سياق 1M بالسعر القياسي"],["لا يولّد الصور","Opus ضعف سعر Sonnet"],"Haiku: سعر أعلى بعد 100 ألف رمز."],
+openai:[["مجموعة كاملة من Luna إلى Astra","قوي في البرمجة واستخدام الحاسوب"],["Astra مرتفع السعر (10 / 50)","Terra غير متاح في الدردشة العادية"],"Sol: سعر أعلى بعد 272 ألف رمز."],
+moonshot:[["أوزان مفتوحة، رؤية وفيديو","سياق 1M وسعر جيد"],["البرمجة: 81% مقابل 92% لـ Opus 5.5 (اختبار طرف ثالث)","Highspeed بضعف السعر"],"اختبار طرف ثالث: 129 مهمة Go خاصة (Requesty)."],
+qwen:[["أسعار منخفضة جدًا","Max: 2.4 تريليون معامل وسياق 1M"],["أفضل النماذج عبر API فقط","Qwen 4 معلن ولم يصدر بعد"],"أسعار API الدولية؛ تختلف حسب المنطقة."],
+deepseek:[["من أدنى الأسعار","سياق 1M ورخصة MIT"],["V4 Pro بلا رؤية","ضعف السعر في ساعات الذروة"],"الأسعار المعروضة: خارج الذروة."],
+glm:[["برمجة وكيلة بأوزان مفتوحة","Flash متعدد الوسائط ورخيص جدًا"],["GLM-5.3 نصي فقط","أقل من Opus في NL2Repo (58% مقابل 70%)"],"الأسعار عبر Together AI / OpenRouter."],
+bigpickle:[["مجاني خلال المعاينة","مصمم لوكلاء البرمجة"],["النموذج الأساسي غير معلن","سياق 200K وبلا رؤية"],"نموذج «خفي» في OpenCode Zen؛ مجاني لفترة محدودة."],
+google:[["متعدد الوسائط (صورة وفيديو وصوت)","سياق 1M ومجموعة واسعة"],["Argon: ضعف السعر من 1 ديسمبر","Carbon بوصول محدود"],"Argon: 2 / 10 دولار حتى 30 نوفمبر ثم 4 / 20."]}}};
+let lang="fr",cur="openai";
+const S=["","●","●●","●●●"];
+const bar=(l,p,t,c)=>`<div class="r"><span>${l}</span><div class="tr"><i style="width:${p}%;background:${c}"></i></div><b>${t}</b></div>`;
+const cost=m=>.2*m[1]+.06*m[2];
+function scat(x){const X=v=>40+(Math.log10(v+.1)+1)/2.8*270,Y=v=>190-(v-5)/5*170;
+let s=`<svg viewBox="0 0 340 225" role="img"><line x1="40" y1="190" x2="320" y2="190" stroke="currentColor" opacity=".4"/><line x1="40" y1="20" x2="40" y2="190" stroke="currentColor" opacity=".4"/>`;
+for(const k in P)P[k].m.forEach(m=>{const on=k==cur;s+=`<circle cx="${X(m[2])}" cy="${Y(m[5])}" r="${on?8:5}" fill="${P[k].c}" opacity="${on?1:.35}"/>`+(on?`<text x="${X(m[2])}" y="${Y(m[5])-11}" font-size="10" text-anchor="middle" fill="currentColor">${m[0]}</text>`:"")});
+return s+`<text x="180" y="212" font-size="10" text-anchor="middle" fill="currentColor">${x.pr.split(" (")[0]} →</text><text x="12" y="105" font-size="10" fill="currentColor" transform="rotate(-90 12 105)" text-anchor="middle">${x.ql.split(" (")[0]} →</text></svg>`}
+function render(){const x=T[lang],d=document.documentElement,pv=P[cur],M=pv.m,pt=x.p[cur];
+d.lang=lang;d.dir=x.dir;d.style.setProperty("--pc",pv.c);
+t.textContent=x.title;su.textContent=x.sub;pb.textContent=x.pb;document.title=x.title;
+document.querySelectorAll(".bt button[data-l]").forEach(b=>b.classList.toggle("on",b.dataset.l==lang));
+ch.innerHTML=Object.keys(P).map(k=>`<button data-p="${k}" class="${k==cur?"on":""}" style="${k==cur?"--pc:"+P[k].c:""}">${P[k].n}</button>`).join("");
+ch.querySelectorAll("button").forEach(b=>b.onclick=()=>{cur=b.dataset.p;render()});
+const pr=v=>v?"$"+v:x.free,lg=v=>v?100*Math.log10(v*10+1)/Math.log10(501):3;
+const col=(i)=>M.length>1?PC[i%4]:pv.c,cs=M.map(cost),mc=Math.max(...cs,.01),mt=Math.max(...M.map(m=>TT[m[4]]));
+m.innerHTML=`<h2>${x.s1}</h2><div class="g"><div class="c"><h3>${x.pr}</h3>${M.map((v,i)=>bar(v[0],lg(v[2]),pr(v[2]),col(i))).join("")}</div>
+<div class="c"><h3>${x.sp}</h3>${M.map((v,i)=>bar(v[0],v[4]*10,v[4],col(i))).join("")}</div>
+<div class="c"><h3>${x.ql}</h3>${M.map((v,i)=>bar(v[0],v[5]*10,v[5],col(i))).join("")}</div>
+<div class="c sc"><h3>${x.sc}</h3>${scat(x)}</div></div>
+<h2>${x.s2}</h2><div class="g"><div class="c" style="border-top:4px solid ${pv.c}"><h3>${pv.n}</h3><ul class="ok">${pt[0].map(s=>`<li>${s}</li>`).join("")}</ul><ul class="no">${pt[1].map(s=>`<li>${s}</li>`).join("")}</ul><p class="sm">${pt[2]}</p></div>
+${M.map((v,i)=>`<div class="c" style="border-top:4px solid ${col(i)}"><h3>${v[0]}</h3><p class="sm">${pr(v[1])} / ${pr(v[2])} · ${v[3]}</p></div>`).join("")}</div>
+<h2>${x.s3}</h2><p class="sm">${x.pd}</p><div class="g">
+<div class="c"><h3>${x.tm}</h3>${M.map((v,i)=>bar(v[0],TT[v[4]]/mt*100,TT[v[4]],col(i))).join("")}</div>
+<div class="c"><h3>${x.co}</h3>${M.map((v,i)=>bar(v[0],Math.max(3,cs[i]/mc*100),cs[i]?"$"+cs[i].toFixed(2):x.free,col(i))).join("")}</div>
+<div class="c"><h3>${x.qu}</h3>${M.map((v,i)=>bar(v[0],v[5]*10,v[5],col(i))).join("")}</div></div>
+<h2>${x.s4}</h2><div class="sc"><table><tr><th></th>${M.map(v=>`<th>${v[0]}</th>`).join("")}</tr>${x.rows.map((r,i)=>`<tr><td>${r}</td>${M.map(v=>`<td class="l${v[6][i]}">${S[v[6][i]]}</td>`).join("")}</tr>`).join("")}</table></div>
+<p class="sm">${x.lg}</p><p class="sm">${x.ft}</p>`}
+document.querySelectorAll(".bt button[data-l]").forEach(b=>b.onclick=()=>{lang=b.dataset.l;render()});
+pb.onclick=()=>window.print();
+render();
+</script></body></html>
